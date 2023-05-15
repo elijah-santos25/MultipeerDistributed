@@ -148,6 +148,11 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         }
     }
     
+    /// Actually performs the remote call.
+    ///
+    /// This method's signature is slightly different from
+    /// ``remoteCall(on:target:invocation:throwing:returning:)`` so both `remoteCall[Void]` methods
+    /// can reuse implementation. (The difference is that this doesn't require `Res` to be `Codable`.
     private func actualRemoteCall<Act: DistributedActor, Err: Error, Res>(
         on actor: Act,
         target: RemoteCallTarget,
@@ -288,6 +293,8 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         throwing errorType: Err.Type,
         returning returnType: Res.Type
     ) async throws -> Res where Act.ID == ActorID {
+        // see the documentation for `actualRemoteCall(on:target:invocation:throwing:returning:)`
+        // for why it exists
         return try await self.actualRemoteCall(
             on: actor,
             target: target,
@@ -303,6 +310,8 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         invocation: inout InvocationEncoder,
         throwing errorType: Err.Type
     ) async throws where Act.ID == ActorID {
+        // see the documentation for `actualRemoteCall(on:target:invocation:throwing:returning:)`
+        // for why it exists
         return try await self.actualRemoteCall(
             on: actor,
             target: target,

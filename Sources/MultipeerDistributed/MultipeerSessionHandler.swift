@@ -24,11 +24,11 @@ import MultipeerConnectivity
     }
     
     func send(_ message: Message, to peer: MCPeerID) throws {
-        try session?.send(JSONEncoder().encode(message), toPeers: [peer], with: .reliable)
+        try session?.send(JSONEncoder().encode(TaggedData(message)), toPeers: [peer], with: .reliable)
     }
     
     func broadcast(_ message: Message) throws {
-        try session?.send(JSONEncoder().encode(message), toPeers: session?.connectedPeers ?? [], with: .reliable)
+        try session?.send(JSONEncoder().encode(TaggedData(message)), toPeers: session?.connectedPeers ?? [], with: .reliable)
     }
     
     

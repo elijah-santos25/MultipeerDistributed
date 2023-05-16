@@ -6,6 +6,10 @@
 import Foundation
 
 struct TaggedData<T: Codable>: Codable {
+    init(_ value: T) {
+        self.value = value
+    }
+    
     private static var tag: String { "MultipeerDistributed" }
     enum CodingKeys: CodingKey {
         case value

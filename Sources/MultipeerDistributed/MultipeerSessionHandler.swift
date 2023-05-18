@@ -13,6 +13,10 @@ import MultipeerConnectivity
     private weak var forwardingDelegate: (any MCSessionDelegate)? = nil
     private unowned let parent: MultipeerActorSystem
     
+    var hasPeers: Bool {
+        self.session?.connectedPeers.count ?? 0 > 0
+    }
+    
     func takeover(_ session: MCSession) {
         self.session = session
         self.forwardingDelegate = session.delegate

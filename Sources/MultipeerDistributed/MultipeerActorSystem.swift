@@ -39,7 +39,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         self.advertisingTask = Task { [weak self] in
             while let self {
                 self.lock.withLock {
-                    guard let multipeerHandler = self.multipeerHandler else {
+                    guard let multipeerHandler = self.multipeerHandler, multipeerHandler.hasPeers else {
                         return
                     }
                     
@@ -152,7 +152,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     ///
     /// This method's signature is slightly different from
     /// ``remoteCall(on:target:invocation:throwing:returning:)`` so both `remoteCall[Void]` methods
-    /// can reuse implementation. (The difference is that this doesn't require `Res` to be `Codable`.
+    /// can reuse implementation. (The difference is that this doesn't require `Res` to be `Codable`.)
     private func actualRemoteCall<Act: DistributedActor, Err: Error, Res>(
         on actor: Act,
         target: RemoteCallTarget,

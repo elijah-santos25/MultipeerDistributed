@@ -185,6 +185,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                 )
             } catch {
                 cont.resume(throwing: error)
+                return
             }
             
             self.inflightCalls[callID] = { [cont] response in

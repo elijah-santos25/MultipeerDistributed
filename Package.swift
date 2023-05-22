@@ -18,8 +18,5 @@ let package = Package(
         .target(
             name: "MultipeerDistributed",
             dependencies: []),
-        .testTarget(
-            name: "MultipeerDistributedTests",
-            dependencies: ["MultipeerDistributed"]),
     ]
 )

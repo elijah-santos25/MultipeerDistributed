@@ -89,7 +89,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     
     // MARK: - Private
     
-    private let lock = NSRecursiveLock()
+    private let lock = NSLock()
     private var managedActors: [ActorID: (any DistributedActor)?] = [:]
     private var actorsToAdvertise: [(any DistributedActor, Data)] = []
     private var knownRemoteActors: [MCPeerID: [ActorRecord]] = [:]
@@ -211,16 +211,14 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
             return try? type.resolve(id: id, using: self)
         }
         
-        return self.lock.withLock {
-            self.knownRemoteActors.values.joined().compactMap { record -> (any DistributedActor, Data)? in
-                guard let type = _typeByName(record.type) as? any (Codable & DistributedActor).Type,
-                      let resolved = resolveConcrete(type, id: record.id) else {
-                    MultipeerActorSystem.logger.info("Couldn't resolve local actor of type \(record.type)")
-                    return nil
-                }
-                
-                return (resolved, record.tag)
+        return self.lock.withLock { self.knownRemoteActors }.values.joined().compactMap { record -> (any DistributedActor, Data)? in
+            guard let type = _typeByName(record.type) as? any (Codable & DistributedActor).Type,
+                  let resolved = resolveConcrete(type, id: record.id) else {
+                MultipeerActorSystem.logger.info("Couldn't resolve local actor of type \(record.type)")
+                return nil
             }
+            
+            return (resolved, record.tag)
         }
     }
     
@@ -228,7 +226,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         self.lock.lock()
         defer { self.lock.unlock() }
         
-        MultipeerActorSystem.logger.info("Received message \(String(reflecting: message)) from \(peer.displayName).")
+        MultipeerActorSystem.logger.trace("Received message \(String(reflecting: message)) from \(peer.displayName).")
         
         // TODO: Refactor to be less ugly
         switch message {

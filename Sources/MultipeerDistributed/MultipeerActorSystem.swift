@@ -89,7 +89,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     
     // MARK: - Private
     
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
     private var managedActors: [ActorID: (any DistributedActor)?] = [:]
     private var actorsToAdvertise: [(any DistributedActor, Data)] = []
     private var knownRemoteActors: [MCPeerID: [ActorRecord]] = [:]
@@ -175,6 +175,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                 guard multipeerHandler.isConnected(to: peer) else {
                     throw ActorSystemError.actorOwnerNotConnected
                 }
+                invocation.container.methodIdentifier = target.identifier
                 try multipeerHandler.send(
                     .performRemoteCall(
                         callID: callID,
@@ -209,16 +210,17 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
             }
             return try? type.resolve(id: id, using: self)
         }
-        self.lock.lock()
-        defer { self.lock.unlock() }
         
-        return self.knownRemoteActors.values.joined().compactMap { record -> (any DistributedActor, Data)? in
-            guard let type = _typeByName(record.type) as? any (Codable & DistributedActor).Type,
-                  let resolved = resolveConcrete(type, id: record.id) else {
-                return nil
+        return self.lock.withLock {
+            self.knownRemoteActors.values.joined().compactMap { record -> (any DistributedActor, Data)? in
+                guard let type = _typeByName(record.type) as? any (Codable & DistributedActor).Type,
+                      let resolved = resolveConcrete(type, id: record.id) else {
+                    MultipeerActorSystem.logger.info("Couldn't resolve local actor of type \(record.type)")
+                    return nil
+                }
+                
+                return (resolved, record.tag)
             }
-            
-            return (resolved, record.tag)
         }
     }
     

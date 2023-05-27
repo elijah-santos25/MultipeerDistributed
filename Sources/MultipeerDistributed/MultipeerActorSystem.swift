@@ -16,7 +16,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     public typealias ResultHandler = MultipeerDistributed.ResultHandler
     public typealias SerializationRequirement = Codable
     
-    enum ActorSystemError: DistributedActorSystemError {
+    public enum ActorSystemError: DistributedActorSystemError {
         // trying to resolve an unknown actor
         case unknownRemoteActor
         // trying to resolve a local reference as the wrong type

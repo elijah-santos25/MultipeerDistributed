@@ -44,16 +44,7 @@ public struct InvocationDecoder: DistributedTargetInvocationDecoder {
     }
     
     public mutating func decodeReturnType() throws -> (Any.Type)? {
-        guard let name = container.returnType else {
-            return nil
-        }
-        guard let type = _typeByName(name) else {
-            print("couldn't construct type")
-            throw InvocationDecodingError.invalidReturnType(.noMatchingType)
-        }
-        
-        return type
+        // legal per the documentation of DistributedTargetInvocationDecoder.decodeReturnType()
+        return nil
     }
-    
-    
 }

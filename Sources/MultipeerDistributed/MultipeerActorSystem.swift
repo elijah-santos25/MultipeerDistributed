@@ -115,19 +115,23 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
             response = try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Response, any Error>) in
                 Task { [cont] in
                     var decoder = InvocationDecoder(container: call)
-                    try await executeDistributedTarget(
-                        on: target,
-                        target: .init(call.methodIdentifier),
-                        invocationDecoder: &decoder,
-                        handler: .init(voidReturnHandler: {
-                            cont.resume(returning: Response.voidSuccess)
-                        }, valueReturnHandler: { data in
-                            // on the recipient end, this type will be known
-                            cont.resume(returning: Response.success(data: data))
-                        }, throwHandler: { err in
-                            cont.resume(returning: Response(thrownError: err))
-                        })
-                    )
+                    do {
+                        try await executeDistributedTarget(
+                            on: target,
+                            target: .init(call.methodIdentifier),
+                            invocationDecoder: &decoder,
+                            handler: .init(voidReturnHandler: {
+                                cont.resume(returning: Response.voidSuccess)
+                            }, valueReturnHandler: { data in
+                                // on the recipient end, this type will be known
+                                cont.resume(returning: Response.success(data: data))
+                            }, throwHandler: { err in
+                                cont.resume(returning: Response(thrownError: err))
+                            })
+                        )
+                    } catch {
+                        cont.resume(throwing: error)
+                    }
                 }
             }
         } catch {

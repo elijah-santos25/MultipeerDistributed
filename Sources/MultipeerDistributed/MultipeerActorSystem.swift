@@ -173,7 +173,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                 guard let multipeerHandler else {
                     throw ActorSystemError.notConnected
                 }
-                guard let peer = self.knownRemoteActors.first(where: { $0.value.contains(where: { $0.id == actor.id }) })?.key else {
+                guard let peer = self.knownRemoteActors.first(where: { $0.key.displayName == actor.id.peer })?.key else {
                     throw ActorSystemError.unknownRemoteActor
                 }
                 guard multipeerHandler.isConnected(to: peer) else {
@@ -343,8 +343,8 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
             return typedLocal
         }
         
-        // if it's not in the managed actors list, it should be known to be at another peer
-        if self.knownRemoteActors.values.contains(where: { $0.contains(where: { $0.id == id }) }) {
+        // if it's not in the managed actors list, it should match another peer's id
+        if self.knownRemoteActors.keys.map(\.displayName).contains(id.peer) {
             return nil
         } else {
             throw ActorSystemError.unknownRemoteActor

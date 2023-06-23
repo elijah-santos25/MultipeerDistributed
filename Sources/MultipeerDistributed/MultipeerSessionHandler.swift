@@ -17,6 +17,10 @@ import MultipeerConnectivity
         self.session?.connectedPeers.count ?? 0 > 0
     }
     
+    var myPeerID: MCPeerID? {
+        session?.myPeerID
+    }
+    
     func takeover(_ session: MCSession) {
         self.session = session
         self.forwardingDelegate = session.delegate

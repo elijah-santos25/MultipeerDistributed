@@ -6,6 +6,6 @@ import Foundation
 
 enum Message: Codable {
     case actorsAvailable(actors: [ActorRecord])
-    case performRemoteCall(callID: UUID, targetActorID: UUID, RemoteCallContainer)
+    case performRemoteCall(callID: UUID, targetActorID: ActorID, RemoteCallContainer)
     case remoteCallResponse(callID: UUID, Response)
 }

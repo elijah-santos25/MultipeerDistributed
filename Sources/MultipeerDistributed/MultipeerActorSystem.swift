@@ -10,7 +10,7 @@ import os
 /// A `MultipeerConnectivity`-based distributed actor system implementation.
 public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Sendable {
     // Sendable conformance: NSLock-synchronized
-    public typealias ActorID = UUID
+    public typealias ActorID = MultipeerDistributed.ActorID
     public typealias InvocationEncoder = MultipeerDistributed.InvocationEncoder
     public typealias InvocationDecoder = MultipeerDistributed.InvocationDecoder
     public typealias ResultHandler = MultipeerDistributed.ResultHandler
@@ -46,7 +46,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                     do {
                         try multipeerHandler.broadcast(
                             .actorsAvailable(actors: self.actorsToAdvertise.compactMap { (actor, tag) in
-                                guard let id = actor.id as? UUID else {
+                                guard let id = actor.id as? ActorID else {
                                     return nil
                                 }
                                 let typeName = _typeName(type(of: actor))
@@ -98,7 +98,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     private var advertisingTask: Task<Void, Never>? = nil
     
     
-    private func sendInvocationContainer(_ container: RemoteCallContainer, call: UUID, actor: UUID, to peer: MCPeerID) throws {
+    private func sendInvocationContainer(_ container: RemoteCallContainer, call: UUID, actor: ActorID, to peer: MCPeerID) throws {
         guard let multipeerHandler else {
             throw ActorSystemError.notConnected
         }
@@ -208,7 +208,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     // MARK: - Internal Interface
     
     func knownActors() -> some Sequence<(any DistributedActor, Data)> {
-        func resolveConcrete<A: DistributedActor & Codable>(_ type: A.Type, id: UUID) -> (any DistributedActor & Codable)? {
+        func resolveConcrete<A: DistributedActor & Codable>(_ type: A.Type, id: ActorID) -> (any DistributedActor & Codable)? {
             guard let self = self as? A.ActorSystem, let id = id as? A.ID else {
                 return nil
             }
@@ -237,7 +237,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         case .actorsAvailable(let actors):
             self.knownRemoteActors[peer] = actors
             Task { [weak self, actors] in
-                func resolveConcrete<A: DistributedActor & Codable>(_ type: A.Type, id: UUID) -> (any DistributedActor & Codable)? {
+                func resolveConcrete<A: DistributedActor & Codable>(_ type: A.Type, id: ActorID) -> (any DistributedActor & Codable)? {
                     guard let self = self as? A.ActorSystem, let id = id as? A.ID else {
                         return nil
                     }
@@ -326,7 +326,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         )
     }
     
-    public func resolve<Act>(id: UUID, as actorType: Act.Type) throws -> Act? where Act : DistributedActor, UUID == Act.ID {
+    public func resolve<Act>(id: ActorID, as actorType: Act.Type) throws -> Act? where Act : DistributedActor, ActorID == Act.ID {
         self.lock.lock()
         defer { self.lock.unlock() }
         
@@ -351,11 +351,11 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         }
     }
     
-    public func assignID<Act>(_ actorType: Act.Type) -> UUID where Act : DistributedActor, Act.ID == ActorID {
+    public func assignID<Act>(_ actorType: Act.Type) -> ActorID where Act : DistributedActor, Act.ID == ActorID {
         self.lock.lock()
         defer { self.lock.unlock() }
         
-        let newID = ActorID()
+        let newID = ActorID(peer: multipeerHandler?.myPeerID?.displayName ?? "")
         
         self.managedActors[newID] = nil
         return newID
@@ -378,7 +378,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         
         self.managedActors.removeValue(forKey: id)
         self.actorsToAdvertise.removeAll { (act, _) in
-            act.id as? UUID == id
+            act.id as? ActorID == id
         }
     }
     

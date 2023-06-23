@@ -114,7 +114,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
         do {
             response = try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Response, any Error>) in
                 Task { [cont] in
-                    var decoder = InvocationDecoder(container: call)
+                    var decoder = InvocationDecoder(container: call, actorSystem: self)
                     do {
                         try await executeDistributedTarget(
                             on: target,
@@ -194,7 +194,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
             }
             
             self.inflightCalls[callID] = { [cont] response in
-                if let result = response.toResult(expecting: returnType) {
+                if let result = response.toResult(expecting: returnType, using: self) {
                     cont.resume(with: result)
                 } else {
                     cont.resume(throwing: ActorSystemError.systemError)

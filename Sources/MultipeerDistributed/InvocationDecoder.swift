@@ -18,16 +18,18 @@ public struct InvocationDecoder: DistributedTargetInvocationDecoder {
     }
     public typealias SerializationRequirement = Codable
     fileprivate var container: RemoteCallContainer
+    private var parent: MultipeerActorSystem
     
-    init(container: RemoteCallContainer) {
+    init(container: RemoteCallContainer, actorSystem: MultipeerActorSystem) {
         self.container = container
+        self.parent = actorSystem
     }
     
     public mutating func decodeNextArgument<Argument: Codable>() throws -> Argument {
         guard container.arguments.count > 0 else {
             throw InvocationDecodingError.tooFewArguments
         }
-        return try JSONDecoder().decode(Argument.self, from: container.arguments.removeFirst())
+        return try JSONDecoder().withActorSystem(parent).decode(Argument.self, from: container.arguments.removeFirst())
     }
     
     public mutating func decodeGenericSubstitutions() throws -> [Any.Type] {

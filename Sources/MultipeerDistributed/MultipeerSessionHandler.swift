@@ -43,9 +43,7 @@ import MultipeerConnectivity
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        let decoder = JSONDecoder()
-        decoder.userInfo[.actorSystemKey] = parent
-        if let tagged = try? decoder.decode(TaggedData<Message>.self, from: data) {
+        if let tagged = try? JSONDecoder().withActorSystem(parent).decode(TaggedData<Message>.self, from: data) {
             // this is our message, so process it
             parent.receivedMessage(tagged.value, from: peerID)
         } else {

@@ -51,11 +51,14 @@ enum Response: Codable {
         self = .voidSuccess
     }
     
-    func toResult<Success>(expecting expectedSuccessType: Success.Type) -> Result<Success, Error>? {
+    func toResult<Success>(
+        expecting expectedSuccessType: Success.Type,
+        using actorSystem: MultipeerActorSystem
+    ) -> Result<Success, Error>? {
         switch self {
         case .wrappingError(typeName: let typeName, data: let data):
             func genericDecode<T: Codable & Error>(type: T.Type, data: Data) -> (any (Codable & Error))? {
-                if let value = try? JSONDecoder().decode(type, from: data) {
+                if let value = try? JSONDecoder().withActorSystem(actorSystem).decode(type, from: data) {
                     return value
                 } else {
                     return nil
@@ -71,7 +74,7 @@ enum Response: Codable {
             return .failure(GenericError(description: "\(typeName): \(description)"))
         case .success(data: let data):
             if let expectedSuccessType = expectedSuccessType as? any Codable.Type {
-                if let value = try? JSONDecoder().decode(expectedSuccessType, from: data) as? Success {
+                if let value = try? JSONDecoder().withActorSystem(actorSystem).decode(expectedSuccessType, from: data) as? Success {
                     return .success(value)
                 } else {
                     return nil

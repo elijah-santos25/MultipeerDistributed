@@ -228,7 +228,6 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     
     func receivedMessage(_ message: Message, from peer: MCPeerID) {
         self.lock.lock()
-        defer { self.lock.unlock() }
         
         MultipeerActorSystem.logger.trace("Received message \(String(reflecting: message)) from \(peer.displayName).")
         
@@ -254,6 +253,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                     }
                 }
             }
+            self.lock.unlock()
         case .performRemoteCall(let callID, let targetActorID, let remoteCallContainer):
             if let actor = self.managedActors[targetActorID], let actor {
                 Task {
@@ -265,6 +265,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                     .remoteCallResponse(callID: callID, .systemFailure), to: peer
                 )
             }
+            self.lock.unlock()
         case .remoteCallResponse(let callID, let response):
             guard let call = inflightCalls.removeValue(forKey: callID) else {
                 MultipeerActorSystem.logger.info(
@@ -272,7 +273,7 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
                 )
                 return
             }
-            
+            self.lock.unlock()
             call(response)
         }
     }

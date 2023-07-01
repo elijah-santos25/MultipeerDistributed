@@ -5,16 +5,9 @@ import Distributed
 
 /// Don't interact with this struct; it's only public due to protocol requirements.
 public struct InvocationDecoder: DistributedTargetInvocationDecoder {
-    fileprivate enum InvocationDecodingError: DistributedActorSystemError {
-        fileprivate enum InvalidReason: String {
-            case unexpected
-            case noMatchingType
-        }
-        case tooFewArguments
-        case tooFewGenericSubstitutions
-        case invalidGenericSubstitution
-        case invalidReturnType(InvalidReason)
-        case invalidErrorType(InvalidReason)
+    fileprivate enum InvocationDecodingError: Int, DistributedActorSystemError {
+        case tooFewArguments = 0
+        case invalidGenericSubstitution = 1
     }
     public typealias SerializationRequirement = Codable
     fileprivate var container: RemoteCallContainer

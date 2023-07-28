@@ -229,7 +229,10 @@ public final class MultipeerActorSystem: DistributedActorSystem, @unchecked Send
     func receivedMessage(_ message: Message, from peer: MCPeerID) {
         self.lock.lock()
         
-        MultipeerActorSystem.logger.trace("Received message \(String(reflecting: message)) from \(peer.displayName).")
+        if case .actorsAvailable(_) = message {} else {
+            // clean up console by avoiding logging actorsAvailable messages
+            MultipeerActorSystem.logger.trace("Received message \(String(reflecting: message)) from \(peer.displayName).")
+        }
         
         // TODO: Refactor to be less ugly
         switch message {
